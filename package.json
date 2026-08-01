@@ -1,0 +1,14 @@
+{
+  "name": "ws-adapter-plugin",
+  "version": "1.1.0",
+  "description": "TRSS-Yunzai 便捷 OneBot 正反向 WebSocket 适配器（专为跨环境/Docker 优化，不收集任何敏感信息）",
+  "main": "index.js",
+  "type": "module",
+  "author": "ShiYuPIay",
+  "license": "AGPL-3.0-or-later",
+  "keywords": ["yunzai", "trss", "onebot", "websocket", "adapter", "snowluma"],
+  "dependencies": {
+    "ws": "^8.18.0",
+    "yaml": "^2.6.0"
+  }
+}
