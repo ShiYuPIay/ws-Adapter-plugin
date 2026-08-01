@@ -73,6 +73,7 @@ export class WsServer extends EventEmitter {
     const clientId = `${req.socket.remoteAddress}:${req.socket.remotePort}`
     logger.mark(`[ws-Adapter][${this.name}] 新客户端连接 ${clientId}`)
     this.clients.add(ws)
+    this.emit('connection', ws)  // Bug 3 fix: expose raw socket so adapter can set up proxy
 
     ws.on('message', (raw) => this.onMessage(ws, raw))
     ws.on('close', () => {

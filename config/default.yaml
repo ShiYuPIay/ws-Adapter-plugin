@@ -12,18 +12,18 @@ presets:
   # 插件作为 WS 客户端，主动连接到 SnowLuma 的 WS 服务端
   - name: snowluma-local
     type: reverse
-    url: "ws://localhost:2536/OneBotv11"
-    desc: "连接本机 TRSS-Yunzai WS 端点（同一台机器时使用）"
+    url: "ws://localhost:3001/"
+    desc: "连接本机 SnowLuma 正向 WS 服务（同一台机器时使用）"
 
   - name: snowluma-docker
     type: reverse
-    url: "ws://snowluma:2536/OneBotv11"
-    desc: "连接同一 Docker 网络中的 TRSS（通过服务名）"
+    url: "ws://snowluma:3001/"
+    desc: "连接同一 Docker 网络中的 SnowLuma（通过服务名）"
 
   - name: host-internal
     type: reverse
-    url: "ws://host.docker.internal:2536/OneBotv11"
-    desc: "容器内连接宿主机上的 TRSS（Docker Desktop 适用）"
+    url: "ws://host.docker.internal:3001/"
+    desc: "容器内连接宿主机上的 SnowLuma（Docker Desktop 适用）"
 
   # ── 插件本地监听（协议端 WS 客户端主动连入）──────────────
   # 插件开启 WS 服务端，SnowLuma 在「WS 客户端」页签配置地址连过来

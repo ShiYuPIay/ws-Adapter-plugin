@@ -10,6 +10,7 @@ import fs from 'fs'
 import path from 'path'
 import yaml from 'yaml'
 import { fileURLToPath } from 'url'
+import WebSocket from 'ws'
 import { WsClient } from '../utils/ws-client.js'
 import { WsServer } from '../utils/ws-server.js'
 import { getRecommendedUrls } from '../utils/docker.js'
@@ -70,9 +71,9 @@ export class wsAdapter extends plugin {
             heartbeatInterval: 10000,
             debug: true,
             presets: [
-              { name: 'snowluma-local',  type: 'reverse', url: 'ws://localhost:2536/OneBotv11', desc: '连接本机 TRSS-Yunzai WS 端点' },
-              { name: 'snowluma-docker', type: 'reverse', url: 'ws://snowluma:2536/OneBotv11',   desc: '连接同一 Docker 网络中的 TRSS' },
-              { name: 'host-internal',   type: 'reverse', url: 'ws://host.docker.internal:2536/OneBotv11', desc: '容器内连接宿主机 TRSS（Docker Desktop）' },
+              { name: 'snowluma-local',  type: 'reverse', url: 'ws://localhost:3001/',                   desc: '连接本机 SnowLuma 正向 WS 服务（同一台机器）' },
+              { name: 'snowluma-docker', type: 'reverse', url: 'ws://snowluma:3001/',                     desc: '连接同一 Docker 网络中的 SnowLuma（通过服务名）' },
+              { name: 'host-internal',   type: 'reverse', url: 'ws://host.docker.internal:3001/', desc: '容器内连接宿主机上的 SnowLuma（Docker Desktop）' },
               { name: 'adapter-forward', type: 'forward', host: '0.0.0.0', port: 3002, path: '/', desc: '插件本地监听服务' }
             ],
             active: ['snowluma-local']
@@ -153,9 +154,9 @@ export class wsAdapter extends plugin {
       debug: this.config.debug ?? true
     })
 
-    client.on('message', (data) => this.dispatchToTrss(data))
     client.on('open', () => {
-      logger.mark(`[ws-Adapter] 反向客户端 [${preset.name}] 已连接`)
+      logger.mark(`[ws-Adapter] 反向客户端 [${preset.name}] 已连接，建立代理通道`)
+      this.setupProxy(client.ws, preset.name)
     })
     client.on('close', () => {
       logger.warn(`[ws-Adapter] 反向客户端 [${preset.name}] 已断开`)
@@ -181,7 +182,10 @@ export class wsAdapter extends plugin {
       debug: this.config.debug ?? true
     })
 
-    server.on('message', (data) => this.dispatchToTrss(data))
+    server.on('connection', (snowlumaWs) => {
+      logger.mark(`[ws-Adapter] 正向服务 [${preset.name}] 新连接，建立代理通道`)
+      this.setupProxy(snowlumaWs, preset.name)
+    })
     server.on('listening', () => {
       logger.mark(`[ws-Adapter] 正向服务 [${preset.name}] 已启动`)
     })
@@ -202,47 +206,43 @@ export class wsAdapter extends plugin {
     this.servers.clear()
   }
 
-  // ==================== 事件分发 ====================
+  // ==================== 代理通道 ====================
 
-  dispatchToTrss(data) {
-    try {
-      if (typeof Bot === 'undefined') {
-        if (this.config.debug) logger.warn('[ws-Adapter] Bot 未定义，跳过事件分发')
-        return
-      }
+  /**
+   * Bug 1 fix: pipe all traffic between a SnowLuma WebSocket and TRSS's own
+   * OneBotv11 server (ws://localhost:2536/OneBotv11).
+   *
+   * TRSS's built-in OneBotv11Adapter handles the full handshake:
+   *   meta_event/lifecycle → get_login_info → Bot[self_id] registration → plugin events
+   *
+   * Previous dispatchToTrss() called Bot.emit('message', rawOBv11) directly,
+   * but Bot[self_id] was never registered so plugins could never reply.
+   */
+  setupProxy(snowlumaWs, name) {
+    const trssUrl = 'ws://localhost:2536/OneBotv11'
+    const trssWs = new WebSocket(trssUrl)
 
-      const postType = data.post_type
+    trssWs.on('open', () => {
+      if (this.config.debug) logger.mark(`[ws-Adapter][${name}] 代理通道已就绪 SnowLuma ↔ TRSS`)
 
-      if (postType === 'message') {
-        const eventName = data.message_type === 'group' ? 'message.group' : 'message.private'
-        Bot.emit?.(eventName, data)
-        Bot.emit?.('message', data)
-        if (data.self_id && Bot[data.self_id]) {
-          Bot[data.self_id].em?.(eventName, data)
-          Bot[data.self_id].em?.('message', data)
-        }
-      } else if (postType === 'notice') {
-        Bot.emit?.('notice', data)
-        if (data.notice_type) {
-          Bot.emit?.(`notice.${data.notice_type}`, data)
-        }
-      } else if (postType === 'request') {
-        Bot.emit?.('request', data)
-        if (data.request_type) {
-          Bot.emit?.(`request.${data.request_type}`, data)
-        }
-      } else if (postType === 'meta_event') {
-        if (this.config.debug) {
-          logger.debug(`[ws-Adapter] 元事件: ${data.meta_event_type}`)
-        }
-      }
+      // SnowLuma → TRSS (events, API responses from SnowLuma)
+      snowlumaWs.on('message', (data) => {
+        if (trssWs.readyState === 1 /* OPEN */) trssWs.send(data)
+      })
 
-      if (this.config.debug) {
-        logger.debug(`[ws-Adapter] 已分发事件 post_type=${postType}`)
-      }
-    } catch (err) {
-      logger.error('[ws-Adapter] 事件分发异常', err)
-    }
+      // TRSS → SnowLuma (API calls: send_msg, etc.)
+      trssWs.on('message', (data) => {
+        if (snowlumaWs.readyState === 1 /* OPEN */) snowlumaWs.send(data)
+      })
+    })
+
+    trssWs.on('error', (err) => {
+      logger.error(`[ws-Adapter][${name}] 无法连接 TRSS (${trssUrl}): ${err.message}`)
+      try { snowlumaWs.close(1011, 'upstream unavailable') } catch {}
+    })
+
+    trssWs.on('close', () => { try { snowlumaWs.close() } catch {} })
+    snowlumaWs.on('close', () => { try { trssWs.close() } catch {} })
   }
 
   // ==================== 指令实现 ====================
