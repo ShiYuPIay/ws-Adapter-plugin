@@ -10,7 +10,6 @@ import fs from 'fs'
 import path from 'path'
 import yaml from 'yaml'
 import { fileURLToPath } from 'url'
-import WebSocket from 'ws'
 import { WsClient } from '../utils/ws-client.js'
 import { WsServer } from '../utils/ws-server.js'
 import { getRecommendedUrls } from '../utils/docker.js'
@@ -155,8 +154,8 @@ export class wsAdapter extends plugin {
     })
 
     client.on('open', () => {
-      logger.mark(`[ws-Adapter] 反向客户端 [${preset.name}] 已连接，建立代理通道`)
-      this.setupProxy(client.ws, preset.name)
+      logger.mark(`[ws-Adapter] 反向客户端 [${preset.name}] 已连接`)
+      this.connectToTrss(client.ws, preset.name)
     })
     client.on('close', () => {
       logger.warn(`[ws-Adapter] 反向客户端 [${preset.name}] 已断开`)
@@ -183,8 +182,8 @@ export class wsAdapter extends plugin {
     })
 
     server.on('connection', (snowlumaWs) => {
-      logger.mark(`[ws-Adapter] 正向服务 [${preset.name}] 新连接，建立代理通道`)
-      this.setupProxy(snowlumaWs, preset.name)
+      logger.mark(`[ws-Adapter] 正向服务 [${preset.name}] 新连接`)
+      this.connectToTrss(snowlumaWs, preset.name)
     })
     server.on('listening', () => {
       logger.mark(`[ws-Adapter] 正向服务 [${preset.name}] 已启动`)
@@ -206,57 +205,32 @@ export class wsAdapter extends plugin {
     this.servers.clear()
   }
 
-  // ==================== 代理通道 ====================
+  // ==================== TRSS 适配器接入 ====================
 
   /**
-   * Bug 1 fix: pipe all traffic between a SnowLuma WebSocket and TRSS's own
-   * OneBotv11 server (ws://localhost:2536/OneBotv11).
+   * Hand a live SnowLuma WebSocket to TRSS's built-in OneBotv11 adapter.
    *
-   * TRSS's built-in OneBotv11Adapter handles the full handshake:
-   *   meta_event/lifecycle → get_login_info → Bot[self_id] registration → plugin events
+   * TRSS supports OneBot v11 as a client (Reverse WebSocket, Forward
+   * WebSocket, Forward HTTP, Reverse HTTP).  adapter.connect(ws) is the
+   * entry point for both inbound and outbound sockets: it runs the full
+   * handshake (meta_event/lifecycle → get_login_info → Bot[self_id]
+   * registration → plugin event routing) and handles user_id / group_id
+   * string→number conversion internally.
    *
-   * Previous dispatchToTrss() called Bot.emit('message', rawOBv11) directly,
-   * but Bot[self_id] was never registered so plugins could never reply.
+   * Previous approach created a raw proxy to ws://localhost:2536/OneBotv11
+   * (the server-side endpoint where protocol clients dial IN to TRSS).
+   * That was the wrong side of the adapter and caused an immediate close
+   * loop because meta_event/lifecycle was dropped in the timing gap.
    */
-  setupProxy(snowlumaWs, name) {
-    const trssUrl = 'ws://localhost:2536/OneBotv11'
-
-    // Buffer SnowLuma messages that arrive before TRSS is ready.
-    // SnowLuma sends meta_event/lifecycle immediately on connect — if we only
-    // install the handler inside trssWs.on('open'), that event is dropped and
-    // TRSS closes the connection with "WebSocket was closed before the
-    // connection was established".
-    const queue = []
-    snowlumaWs.on('message', (data) => {
-      if (trssWs.readyState === 1 /* OPEN */) {
-        trssWs.send(data)
-      } else {
-        queue.push(data)
-      }
-    })
-
-    const trssWs = new WebSocket(trssUrl)
-
-    trssWs.on('open', () => {
-      if (this.config.debug) logger.mark(`[ws-Adapter][${name}] 代理通道已就绪 SnowLuma ↔ TRSS`)
-
-      // Flush buffered messages (includes meta_event/lifecycle)
-      for (const msg of queue) trssWs.send(msg)
-      queue.length = 0
-
-      // TRSS → SnowLuma (API calls: send_msg, etc.)
-      trssWs.on('message', (data) => {
-        if (snowlumaWs.readyState === 1 /* OPEN */) snowlumaWs.send(data)
-      })
-    })
-
-    trssWs.on('error', (err) => {
-      logger.error(`[ws-Adapter][${name}] 无法连接 TRSS (${trssUrl}): ${err.message}`)
-      try { snowlumaWs.close(1011, 'upstream unavailable') } catch {}
-    })
-
-    trssWs.on('close', () => { try { snowlumaWs.close() } catch {} })
-    snowlumaWs.on('close', () => { try { trssWs.close() } catch {} })
+  connectToTrss(ws, name) {
+    const adapter = Bot?.adapter?.get?.('OneBotv11')
+    if (!adapter) {
+      logger.error(`[ws-Adapter][${name}] 无法获取 OneBotv11 适配器实例，请确认 TRSS-Yunzai 已正常启动`)
+      try { ws.close(1011, 'adapter unavailable') } catch {}
+      return
+    }
+    if (this.config.debug) logger.mark(`[ws-Adapter][${name}] 移交 OneBotv11 适配器`)
+    adapter.connect(ws)
   }
 
   // ==================== 指令实现 ====================
