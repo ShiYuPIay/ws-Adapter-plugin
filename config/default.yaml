@@ -8,8 +8,17 @@ heartbeatInterval: 10000
 debug: true
 
 presets:
-  # ── 插件主动连出（WS 客户端 → SnowLuma 反向 WS 客户端）─────────────────
-  # 插件作为 WS 客户端，主动连接到 SnowLuma 的反向 WS 客户端接入端口
+  # ── 插件本地监听（主要模式）──────────────────────────────────────────────
+  # 插件作为 WS 服务端监听，SnowLuma 反向 WS 客户端主动连入
+  - name: adapter-forward
+    type: forward
+    host: "0.0.0.0"
+    port: 3002
+    path: "/"
+    desc: "插件本地监听服务（SnowLuma 反向 WS 客户端主动连入时使用）"
+
+  # ── 插件主动连出（备用模式）──────────────────────────────────────────────
+  # 插件作为 WS 客户端，主动连接到 SnowLuma 的正向 WS 服务端
   - name: snowluma-local
     type: reverse
     url: "ws://localhost:3001/"
@@ -25,17 +34,8 @@ presets:
     url: "ws://host.docker.internal:3001/"
     desc: "容器内连接宿主机上的 SnowLuma（Docker Desktop 适用）"
 
-  # ── 插件本地监听（协议端 WS 客户端主动连入）──────────────
-  # 插件开启 WS 服务端，SnowLuma 在「WS 客户端」页签配置地址连过来
-  - name: adapter-forward
-    type: forward
-    host: "0.0.0.0"
-    port: 3002
-    path: "/"
-    desc: "插件本地监听服务（SnowLuma WS 客户端主动连入时使用）"
-
 # 启动时自动激活的预设（填预设的 name）
-# 默认使用 snowluma-local：插件主动连接到 SnowLuma 的 WS 服务端
-# Docker 跨网络时改为对应地址，或用 #添加连接 ws://地址 手动指定
+# 默认使用 adapter-forward：插件作为 WS 服务端，SnowLuma 反向 WS 客户端主动连入
+# 备用：改为 snowluma-local / snowluma-docker / host-internal 让插件主动连出
 active:
-  - snowluma-local
+  - adapter-forward
