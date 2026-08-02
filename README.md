@@ -1,4 +1,4 @@
-# ws-Adapter
+# ws-Adapter-plugin
 
 TRSS-Yunzai 的 OneBot WebSocket 适配器，支持插件监听（协议端主动连入）和插件主动连接（连接到协议端服务）两种模式，专为跨容器 / Docker 环境优化。
 
