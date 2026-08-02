@@ -8,8 +8,8 @@ heartbeatInterval: 10000
 debug: true
 
 presets:
-  # ── 插件主动连出（reverse-ws）─────────────────────────────
-  # 插件作为 WS 客户端，主动连接到 SnowLuma 的 WS 服务端
+  # ── 插件主动连出（WS 客户端 → SnowLuma 反向 WS 客户端）─────────────────
+  # 插件作为 WS 客户端，主动连接到 SnowLuma 的反向 WS 客户端接入端口
   - name: snowluma-local
     type: reverse
     url: "ws://localhost:3001/"
