@@ -220,15 +220,29 @@ export class wsAdapter extends plugin {
    */
   setupProxy(snowlumaWs, name) {
     const trssUrl = 'ws://localhost:2536/OneBotv11'
+
+    // Buffer SnowLuma messages that arrive before TRSS is ready.
+    // SnowLuma sends meta_event/lifecycle immediately on connect — if we only
+    // install the handler inside trssWs.on('open'), that event is dropped and
+    // TRSS closes the connection with "WebSocket was closed before the
+    // connection was established".
+    const queue = []
+    snowlumaWs.on('message', (data) => {
+      if (trssWs.readyState === 1 /* OPEN */) {
+        trssWs.send(data)
+      } else {
+        queue.push(data)
+      }
+    })
+
     const trssWs = new WebSocket(trssUrl)
 
     trssWs.on('open', () => {
       if (this.config.debug) logger.mark(`[ws-Adapter][${name}] 代理通道已就绪 SnowLuma ↔ TRSS`)
 
-      // SnowLuma → TRSS (events, API responses from SnowLuma)
-      snowlumaWs.on('message', (data) => {
-        if (trssWs.readyState === 1 /* OPEN */) trssWs.send(data)
-      })
+      // Flush buffered messages (includes meta_event/lifecycle)
+      for (const msg of queue) trssWs.send(msg)
+      queue.length = 0
 
       // TRSS → SnowLuma (API calls: send_msg, etc.)
       trssWs.on('message', (data) => {
