@@ -71,12 +71,12 @@ export class wsAdapter extends plugin {
             heartbeatInterval: 10000,
             debug: true,
             presets: [
-              { name: 'adapter-forward', type: 'forward', host: '0.0.0.0', port: 3002, path: '/', desc: '插件本地监听服务（SnowLuma 反向 WS 客户端主动连入）' },
-              { name: 'snowluma-local',  type: 'reverse', url: 'ws://localhost:3001/',                   desc: '连接本机 SnowLuma 正向 WS 服务（同一台机器）' },
-              { name: 'snowluma-docker', type: 'reverse', url: 'ws://snowluma:3001/',                     desc: '连接同一 Docker 网络中的 SnowLuma（通过服务名）' },
-              { name: 'host-internal',   type: 'reverse', url: 'ws://host.docker.internal:3001/', desc: '容器内连接宿主机上的 SnowLuma（Docker Desktop）' }
+              { name: 'snowluma-local',  type: 'reverse', url: 'ws://localhost:3001/',                   desc: '连接本机 SnowLuma 反向 WS 客户端（同一台机器）' },
+              { name: 'snowluma-docker', type: 'reverse', url: 'ws://snowluma:3001/',                     desc: '连接同一 Docker 网络中的 SnowLuma 反向 WS 客户端（通过服务名）' },
+              { name: 'host-internal',   type: 'reverse', url: 'ws://host.docker.internal:3001/', desc: '容器内连接宿主机上的 SnowLuma 反向 WS 客户端（Docker Desktop）' },
+              { name: 'adapter-forward', type: 'forward', host: '0.0.0.0', port: 3002, path: '/', desc: '插件本地监听服务（SnowLuma 主动连入，备用）' }
             ],
-            active: ['adapter-forward']
+            active: ['snowluma-local']
           }
           fs.writeFileSync(this.configPath, yaml.stringify(defaultCfg), 'utf8')
         }
