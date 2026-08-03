@@ -1,42 +1,14 @@
 enable: true
-messageFormat: array          # array | string
-role: Universal
-reportSelfMessage: true
+
+listen:
+  host: "0.0.0.0"
+  port: 3002
+  path: "/"
+
+upstream:
+  url: "ws://127.0.0.1:2536/OneBotv11/ws"
+
+# SnowLuma → ws-Adapter 与 ws-Adapter → TRSS 共用此 Token。
 accessToken: ""
-reconnectInterval: 5000
-heartbeatInterval: 10000
-debug: true
-
-presets:
-  # ── 插件主动连出（主要模式）──────────────────────────────────────────────
-  # 插件作为 WS 客户端，主动连接到 SnowLuma 的反向 WS 客户端端口
-  # 连接方向：插件 → SnowLuma 反向 WS 客户端
-  - name: snowluma-local
-    type: reverse
-    url: "ws://localhost:3001/"
-    desc: "连接本机 SnowLuma 反向 WS 客户端（同一台机器时使用）"
-
-  - name: snowluma-docker
-    type: reverse
-    url: "ws://snowluma:3001/"
-    desc: "连接同一 Docker 网络中的 SnowLuma 反向 WS 客户端（通过服务名）"
-
-  - name: host-internal
-    type: reverse
-    url: "ws://host.docker.internal:3001/"
-    desc: "容器内连接宿主机上的 SnowLuma 反向 WS 客户端（Docker Desktop 适用）"
-
-  # ── 插件本地监听（备用模式）──────────────────────────────────────────────
-  # 插件作为 WS 服务端监听，SnowLuma 主动连入（连接方向与主要模式相反）
-  - name: adapter-forward
-    type: forward
-    host: "0.0.0.0"
-    port: 3002
-    path: "/"
-    desc: "插件本地监听服务（SnowLuma 主动连入时使用，备用）"
-
-# 启动时自动激活的预设（填预设的 name）
-# 默认使用 snowluma-local：插件主动连接到 SnowLuma 的反向 WS 客户端
-# 连接方向：插件 → SnowLuma，不是 SnowLuma → 插件
-active:
-  - snowluma-local
+connectTimeout: 5000
+debug: false
