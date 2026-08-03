@@ -3,251 +3,72 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ws-Adapter 零基础接线手册：把 SnowLuma reverse-ws 安全接入 TRSS-Yunzai。">
+  <meta http-equiv="refresh" content="5;url=https://ws-adapter-plugin.github.io/">
+  <meta name="robots" content="noindex,follow">
   <meta name="theme-color" content="#07131b">
-  <title>ws-Adapter 接线手册｜SnowLuma × TRSS-Yunzai</title>
-  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./assets/styles.css">
-  <script src="./assets/app.js" defer></script>
+  <link rel="canonical" href="https://ws-adapter-plugin.github.io/">
+  <title>教学网站已迁移｜ws-Adapter</title>
+  <style>
+    :root { --ink:#07131b; --panel:#0d232d; --paper:#f3f0e7; --cyan:#35d7c5; --orange:#ffad42; --muted:#8ca0a4; }
+    * { box-sizing:border-box; }
+    body {
+      display:grid; min-height:100vh; margin:0; place-items:center; padding:24px;
+      color:var(--paper); background:
+        linear-gradient(rgba(53,215,197,.04) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(53,215,197,.04) 1px,transparent 1px),
+        var(--ink); background-size:24px 24px;
+      font-family:"MiSans","HarmonyOS Sans SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    }
+    main { width:min(760px,100%); border:1px solid #28404a; background:rgba(13,35,45,.94); box-shadow:18px 18px 0 rgba(0,0,0,.22); }
+    .route { display:flex; align-items:center; gap:12px; padding:18px 24px; color:var(--cyan); border-bottom:1px solid #28404a; font:800 11px "Cascadia Code",Consolas,monospace; letter-spacing:.12em; }
+    .route i { width:8px; height:8px; border-radius:50%; background:var(--cyan); box-shadow:0 0 0 6px rgba(53,215,197,.1); }
+    .route span { flex:1; height:1px; background:linear-gradient(90deg,var(--cyan),transparent); }
+    .content { padding:clamp(34px,8vw,72px); }
+    .eyebrow { color:var(--orange); font:800 11px "Cascadia Code",Consolas,monospace; letter-spacing:.12em; }
+    h1 { margin:18px 0; font-size:clamp(42px,8vw,76px); letter-spacing:-.07em; line-height:.98; }
+    h1 em { color:var(--cyan); font-style:normal; }
+    p { max-width:590px; color:var(--muted); font-size:17px; line-height:1.8; }
+    code { color:var(--cyan); font-family:"Cascadia Code",Consolas,monospace; overflow-wrap:anywhere; }
+    .actions { display:flex; gap:12px; align-items:center; margin-top:32px; flex-wrap:wrap; }
+    a.primary { display:inline-flex; min-height:50px; align-items:center; padding:0 22px; color:var(--ink); background:var(--orange); font-weight:900; text-decoration:none; box-shadow:5px 5px 0 rgba(255,173,66,.18); }
+    a.primary:hover,a.primary:focus-visible { background:#ffc06e; transform:translateY(-2px); }
+    a.repo { color:var(--muted); font-size:13px; }
+    #countdown { color:var(--paper); font-weight:800; }
+    footer { padding:14px 24px; color:#667b80; border-top:1px solid #28404a; font-size:11px; }
+    :focus-visible { outline:3px solid var(--cyan); outline-offset:4px; }
+    @media (max-width:520px) { .content{padding:34px 24px}.actions{align-items:stretch;flex-direction:column}.actions a{text-align:center;justify-content:center} }
+    @media (prefers-reduced-motion:reduce) { *{scroll-behavior:auto!important;transition:none!important} }
+  </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">跳到教程正文</a>
-  <header class="site-header">
-    <a class="brand" href="#top" aria-label="ws-Adapter 教程首页">
-      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span><strong>ws-Adapter</strong><small>接线手册 · v1.1</small></span>
-    </a>
-    <nav class="top-nav" aria-label="主导航">
-      <a href="#install">安装</a><a href="#configurator">生成配置</a><a href="#snowluma">SnowLuma</a><a href="#troubleshoot">不响应？</a>
-    </nav>
-    <a class="github-link" href="https://github.com/ShiYuPIay/ws-Adapter-plugin" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
-  </header>
-  <div class="progress-rail" aria-hidden="true"><span id="reading-progress"></span></div>
-
-  <main id="main">
-    <section class="hero" id="top">
-      <div class="hero-copy reveal">
-        <span class="eyebrow"><b class="signal-dot"></b> 零基础 · 约 15 分钟完成</span>
-        <h1>让 QQ 消息<br><em>沿原路回来。</em></h1>
-        <p class="hero-lead">把 SnowLuma 收到的 OneBot v11 消息交给 TRSS-Yunzai，再把插件回复原样送回 QQ。无需购买服务器，也不需要修改任何源码。</p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="#prepare">从第 1 步开始 <span aria-hidden="true">↓</span></a>
-          <a class="button button-quiet" href="#troubleshoot">我的 QQ 不回复</a>
-        </div>
-        <ul class="trust-list" aria-label="隐私与部署说明"><li>Token 不上传</li><li>纯静态网页</li><li>可用于 Docker</li></ul>
+  <main>
+    <div class="route"><i aria-hidden="true"></i> ROUTE MOVED <span aria-hidden="true"></span> HTTP 301 COMPAT</div>
+    <div class="content">
+      <span class="eyebrow">ws-Adapter · 教学入口更新</span>
+      <h1>线路已迁移到<br><em>新地址。</em></h1>
+      <p>零基础接线手册已经迁移到独立的公开网站。<span id="countdown" aria-live="polite">3 秒后自动前往</span>，也可以立即点击下面的按钮。</p>
+      <p><code>https://ws-adapter-plugin.github.io/</code></p>
+      <div class="actions">
+        <a class="primary" href="https://ws-adapter-plugin.github.io/">立即前往新网站 →</a>
+        <a class="repo" href="https://github.com/ShiYuPIay/ws-Adapter-plugin">返回插件仓库</a>
       </div>
-      <div class="signal-map reveal" aria-label="消息通信线路示意图">
-        <div class="map-caption"><span>LIVE ROUTE</span><b>双向透明转发</b></div>
-        <ol>
-          <li><span class="node-index">01</span><div><b>QQ 用户</b><small>发送“#适配器帮助”</small></div></li>
-          <li><span class="node-index">02</span><div><b>SnowLuma</b><small>reverse-ws 主动连接</small></div></li>
-          <li class="active"><span class="node-index">03</span><div><b>ws-Adapter</b><small>监听 0.0.0.0:6099/ws</small></div></li>
-          <li><span class="node-index">04</span><div><b>TRSS-Yunzai</b><small>OneBotv11 / 2536</small></div></li>
-          <li><span class="node-index">05</span><div><b>Yunzai 插件</b><small>处理命令并回复</small></div></li>
-        </ol>
-        <div class="return-line"><span>RESPONSE</span><i></i><strong>回复按原线路返回 QQ</strong></div>
-      </div>
-    </section>
-
-    <section class="truth-strip" aria-label="最重要的方向说明">
-      <strong>先记住这一句</strong><p><mark>SnowLuma 主动连接 ws-Adapter。</mark>所以 SnowLuma 里要新建“WebSocket 反向客户端”，插件负责监听端口。</p>
-    </section>
-
-    <div class="manual-layout">
-      <aside class="step-nav" aria-label="教程进度">
-        <p>接线进度 <span id="progress-count">0 / 8</span></p>
-        <ol>
-          <li><a href="#prepare" data-step-link="prepare"><span>1</span>准备检查</a></li>
-          <li><a href="#install" data-step-link="install"><span>2</span>安装插件</a></li>
-          <li><a href="#activate" data-step-link="activate"><span>3</span>首次启动</a></li>
-          <li><a href="#environment" data-step-link="environment"><span>4</span>选择环境</a></li>
-          <li><a href="#configurator" data-step-link="configurator"><span>5</span>生成配置</a></li>
-          <li><a href="#snowluma" data-step-link="snowluma"><span>6</span>填写 SnowLuma</a></li>
-          <li><a href="#verify" data-step-link="verify"><span>7</span>验证通信</a></li>
-          <li><a href="#troubleshoot" data-step-link="troubleshoot"><span>8</span>故障排查</a></li>
-        </ol>
-        <button class="reset-progress" id="reset-progress" type="button">清除勾选记录</button>
-      </aside>
-
-      <div class="manual-content">
-        <section class="manual-section reveal" id="prepare" data-step="prepare">
-          <header class="section-heading"><span class="step-number">STEP 01</span><div><p>上电前检查</p><h2>先确认五件事</h2></div></header>
-          <p class="section-intro">不熟悉终端没关系。逐项勾选，缺少哪一项就先处理哪一项；勾选状态只保存在你的浏览器里。</p>
-          <div class="check-grid">
-            <label class="check-card"><input type="checkbox" data-check="snowluma"><span class="box"></span><span><b>SnowLuma 已登录 QQ</b><small>能在 SnowLuma 界面看到 QQ 账号和在线状态。</small></span></label>
-            <label class="check-card"><input type="checkbox" data-check="trss"><span class="box"></span><span><b>TRSS-Yunzai 能启动</b><small>启动后控制台没有持续报错，已有插件可以正常加载。</small></span></label>
-            <label class="check-card"><input type="checkbox" data-check="node"><span class="box"></span><span><b>Node.js ≥ 18</b><small>终端输入 <code>node -v</code>，版本第一位应为 18 或更大。</small></span></label>
-            <label class="check-card"><input type="checkbox" data-check="directory"><span class="box"></span><span><b>知道 TRSS 所在目录</b><small>目录里能看到 <code>plugins</code> 文件夹。</small></span></label>
-            <label class="check-card"><input type="checkbox" data-check="restart"><span class="box"></span><span><b>可以重启 TRSS</b><small>首次安装和修改鉴权后都需要完整重启一次。</small></span></label>
-          </div>
-          <div class="step-footer"><p id="prepare-status" aria-live="polite">完成 0 / 5 项检查</p><button class="complete-step" type="button" data-complete="prepare">标记本步完成</button></div>
-        </section>
-
-        <section class="manual-section reveal" id="install" data-step="install">
-          <header class="section-heading"><span class="step-number">STEP 02</span><div><p>把插件放对位置</p><h2>安装 ws-Adapter</h2></div></header>
-          <div class="notice orange"><b>在哪里执行？</b><p>打开 TRSS-Yunzai 所在目录，再打开 PowerShell 或终端。命令中的 TRSS-Yunzai 要替换为你的实际目录名。</p></div>
-          <div class="tabs" data-tabs>
-            <div role="tablist" aria-label="操作系统"><button role="tab" aria-selected="true" aria-controls="windows-panel" id="windows-tab">Windows PowerShell</button><button role="tab" aria-selected="false" aria-controls="unix-panel" id="unix-tab">Linux / macOS</button></div>
-            <div role="tabpanel" id="windows-panel" aria-labelledby="windows-tab">
-              <div class="code-block"><div class="code-head"><span>PowerShell</span><button class="copy-button" type="button" data-copy-target="install-windows">复制全部</button></div><pre id="install-windows"><code>cd .\TRSS-Yunzai\plugins
-git clone https://github.com/ShiYuPIay/ws-Adapter-plugin.git
-cd .\ws-Adapter-plugin
-npm install --omit=dev</code></pre></div>
-            </div>
-            <div role="tabpanel" id="unix-panel" aria-labelledby="unix-tab" hidden>
-              <div class="code-block"><div class="code-head"><span>Terminal</span><button class="copy-button" type="button" data-copy-target="install-unix">复制全部</button></div><pre id="install-unix"><code>cd TRSS-Yunzai/plugins
-git clone https://github.com/ShiYuPIay/ws-Adapter-plugin.git
-cd ws-Adapter-plugin
-npm install --omit=dev</code></pre></div>
-            </div>
-          </div>
-          <div class="folder-tree"><span>安装成功后应当看到</span><pre>TRSS-Yunzai/
-└─ plugins/
-   └─ <b>ws-Adapter-plugin/</b>
-      ├─ apps/
-      ├─ components/
-      ├─ config/
-      └─ package.json</pre></div>
-          <details><summary>提示“目录已经存在”怎么办？</summary><p>不要再次克隆。进入原来的 ws-Adapter-plugin 目录，依次执行 <code>git pull</code> 和 <code>npm install --omit=dev</code>。</p></details>
-          <details><summary>提示找不到 git 或 npm 怎么办？</summary><p>git 不存在时安装 Git；npm 不存在时安装 Node.js 18 或更高版本。安装后关闭并重新打开终端再试。</p></details>
-          <div class="step-footer"><p>最后一行没有红色报错即可继续。</p><button class="complete-step" type="button" data-complete="install">标记本步完成</button></div>
-        </section>
-
-        <section class="manual-section reveal" id="activate" data-step="activate">
-          <header class="section-heading"><span class="step-number">STEP 03</span><div><p>让网关开始监听</p><h2>重启并激活插件</h2></div></header>
-          <ol class="instruction-list">
-            <li><span>1</span><div><b>完整重启 TRSS-Yunzai</b><p>第一次安装时不能依靠 QQ 命令重载，因为此时 QQ 通信还没有接通。</p></div></li>
-            <li><span>2</span><div><b>等待自动生成配置</b><p>文件位置：<code>plugins/ws-Adapter-plugin/config/config.yaml</code></p></div></li>
-            <li><span>3</span><div><b>寻找启动日志</b><p>看到下面整行文字，说明端口已经开始监听。</p></div></li>
-          </ol>
-          <div class="terminal"><div class="terminal-bar"><i></i><i></i><i></i><span>TRSS-Yunzai console</span></div><pre><span class="log-time">[启动]</span> <span class="log-ok">[ws-Adapter]</span> 网关已启动，绑定 <b>0.0.0.0:6099/ws</b>；SnowLuma 同机目标 <b>ws://127.0.0.1:6099/ws</b></pre></div>
-          <div class="notice cyan"><b>为什么这里出现 0.0.0.0？</b><p><code>0.0.0.0</code> 是插件的“监听范围”，不是让 SnowLuma 填写的目标地址。SnowLuma 目标 URL 永远不要写 <code>0.0.0.0</code>。</p></div>
-          <div class="step-footer"><p>没有这行日志？先检查插件目录和依赖安装。</p><button class="complete-step" type="button" data-complete="activate">标记本步完成</button></div>
-        </section>
-
-        <section class="manual-section reveal" id="environment" data-step="environment">
-          <header class="section-heading"><span class="step-number">STEP 04</span><div><p>这是唯一需要做的网络选择</p><h2>SnowLuma 和 TRSS 在哪里？</h2></div></header>
-          <p class="section-intro">选择最符合你的情况的一项。页面会据此生成 SnowLuma 的目标 URL。</p>
-          <div class="environment-grid" role="radiogroup" aria-label="运行环境">
-            <label class="environment-card"><input type="radio" name="environment" value="same-host" checked><span class="radio-dot"></span><span class="env-icon">A</span><b>同一台电脑</b><small>SnowLuma 和 TRSS 都直接运行在同一系统。</small></label>
-            <label class="environment-card"><input type="radio" name="environment" value="same-docker"><span class="radio-dot"></span><span class="env-icon">B</span><b>同一 Docker 网络</b><small>分别在两个容器，但共享同一个 Docker 网络。</small></label>
-            <label class="environment-card"><input type="radio" name="environment" value="host-docker"><span class="radio-dot"></span><span class="env-icon">C</span><b>SnowLuma 在宿主机</b><small>TRSS 在 Docker，SnowLuma 直接运行在宿主机。</small></label>
-            <label class="environment-card"><input type="radio" name="environment" value="cross-host"><span class="radio-dot"></span><span class="env-icon">D</span><b>不同电脑 / 网络</b><small>SnowLuma 与 TRSS 不在同一台主机或 Docker 网络。</small></label>
-          </div>
-          <div class="conditional-field" id="docker-name-field" hidden><label for="docker-name">TRSS 的 Docker 服务名</label><input id="docker-name" type="text" placeholder="例如：trss-yunzai" autocomplete="off" spellcheck="false"><small>查看 docker-compose.yml 中 services: 下方的名称。</small></div>
-          <div class="conditional-field" id="host-ip-field" hidden><label for="host-ip">TRSS 宿主机 IP 或域名</label><input id="host-ip" type="text" placeholder="例如：192.168.1.20" autocomplete="off" spellcheck="false"><small>填写 SnowLuma 所在设备能够访问到的地址，不要填 127.0.0.1。</small></div>
-          <div class="generated-url"><div><span>SNOWLUMA 目标 URL</span><strong id="target-url">ws://127.0.0.1:6099/ws</strong></div><button class="copy-button" type="button" data-copy-value="target-url">复制地址</button></div>
-          <div id="environment-note" class="environment-note"><b>同机说明</b><p><code>127.0.0.1</code> 表示“这台电脑自己”。不需要开放防火墙端口。</p></div>
-          <div class="step-footer"><p>插件自身仍固定绑定 <code>0.0.0.0:6099/ws</code>。</p><button class="complete-step" type="button" data-complete="environment">标记本步完成</button></div>
-        </section>
-
-        <section class="manual-section reveal" id="configurator" data-step="configurator">
-          <header class="section-heading"><span class="step-number">STEP 05</span><div><p>三处配置一次对齐</p><h2>生成 Token 与配置</h2></div></header>
-          <div class="security-choice"><div><b>是否启用共用 Token？</b><p>跨容器或跨主机强烈建议启用；只在可信本机测试时可以暂时关闭。</p></div><label class="switch"><input id="token-toggle" type="checkbox" checked><span></span><b id="token-state">已启用</b></label></div>
-          <div class="token-field" id="token-field"><label for="token-input">原始 Token</label><div class="input-actions"><input id="token-input" type="password" autocomplete="new-password" placeholder="输入或点击右侧随机生成"><button id="toggle-token" type="button" aria-label="显示 Token">显示</button><button id="generate-token" type="button">随机生成</button></div><small><b>不会上传或保存。</b>刷新、关闭页面后自动消失。请自行安全保存。</small></div>
-          <div class="privacy-banner"><span aria-hidden="true">⌁</span><p><b>本地生成，本地复制</b><br>本页没有后端、统计脚本或网络提交表单。</p></div>
-          <div class="config-output-grid">
-            <article class="config-output"><header><span>01</span><div><b>TRSS-Yunzai</b><small>config/config/server.yaml</small></div></header><div class="code-block"><div class="code-head"><span>完整请求头，要写 Bearer</span><button class="copy-button" type="button" data-copy-target="trss-config">复制</button></div><pre id="trss-config"><code>auth:
-  Authorization: "Bearer "</code></pre></div></article>
-            <article class="config-output"><header><span>02</span><div><b>ws-Adapter</b><small>plugins/ws-Adapter-plugin/config/config.yaml</small></div></header><div class="code-block"><div class="code-head"><span>只写原始 Token</span><button class="copy-button" type="button" data-copy-target="adapter-config">复制</button></div><pre id="adapter-config"><code>enable: true
-
-listen:
-  host: "0.0.0.0"
-  port: 6099
-  path: "/ws"
-
-upstream:
-  url: "ws://127.0.0.1:2536/OneBotv11/ws"
-
-accessToken: ""
-connectTimeout: 5000
-debug: false</code></pre></div></article>
-            <article class="config-output"><header><span>03</span><div><b>SnowLuma</b><small>授权 Token 输入框</small></div></header><div class="code-block"><div class="code-head"><span>仍然只写原始 Token</span><button class="copy-button" type="button" data-copy-target="snowluma-token">复制</button></div><pre id="snowluma-token"><code>（请先输入或生成 Token）</code></pre></div></article>
-          </div>
-          <div id="token-message" class="inline-message" aria-live="polite">三处必须使用同一个原始 Token；只有 TRSS 配置需要加 <code>Bearer </code>。</div>
-          <div class="step-footer"><p>保存两份 YAML 后，完整重启 TRSS-Yunzai。</p><button class="complete-step" type="button" data-complete="configurator">标记本步完成</button></div>
-        </section>
-
-        <section class="manual-section reveal" id="snowluma" data-step="snowluma">
-          <header class="section-heading"><span class="step-number">STEP 06</span><div><p>照着字段逐项填写</p><h2>新建 WebSocket 反向客户端</h2></div></header>
-          <div class="danger-choice"><span>!</span><div><b>不要选择“WebSocket 服务”</b><p>请选择名称中带有“反向客户端（reverse-ws）”的节点。它会主动连接外部 WebSocket 服务器。</p></div></div>
-          <div class="mock-window">
-            <div class="mock-title"><span class="reverse-symbol">↔</span><div><b>新建 WebSocket 反向客户端</b><small>主动连接到外部 WebSocket 服务器（reverse-ws）</small></div></div>
-            <div class="mock-form">
-              <div class="mock-row wide"><span class="callout">1</span><div><label>启用</label><small>关闭后保存可保留配置但不启动该节点</small></div><i class="mock-switch on"></i></div>
-              <div class="mock-field wide"><span class="callout">2</span><label>名称</label><div>TRSS-Yunzai</div></div>
-              <div class="mock-field"><span class="callout">3</span><label>目标 URL</label><div id="mock-target-url">ws://127.0.0.1:6099/ws</div></div>
-              <div class="mock-field"><span class="callout">4</span><label>重连间隔 (ms)</label><div>5000</div></div>
-              <div class="mock-field wide"><span class="callout">5</span><label>授权 Token</label><div id="mock-token">••••••••••••••••</div></div>
-              <div class="mock-row wide"><span class="callout">6</span><div><label>消息格式</label><small>数组为标准 OneBot 段</small></div><b>数组⌄</b></div>
-              <div class="mock-row wide"><span class="callout">7</span><div><label>角色</label><small>Universal 收发合一，Event / Api 分离</small></div><b>Universal⌄</b></div>
-              <div class="mock-row wide"><span class="callout">8</span><div><label>上报自身消息</label><small>初次配置建议关闭</small></div><i class="mock-switch"></i></div>
-            </div>
-          </div>
-          <ol class="field-legend"><li><span>1–2</span><p>启用节点，名称可以自定义。</p></li><li><span>3</span><p>直接复制上一步生成的目标 URL。</p></li><li><span>4</span><p>重连间隔填 <code>5000</code>。</p></li><li><span>5</span><p>启用 Token 时填原始 Token；不启用时留空。</p></li><li><span>6–8</span><p>消息格式“数组”、角色“Universal”、初次关闭自身消息。</p></li></ol>
-          <div class="step-footer"><p>保存节点后，SnowLuma 会立即尝试主动连接。</p><button class="complete-step" type="button" data-complete="snowluma">标记本步完成</button></div>
-        </section>
-
-        <section class="manual-section reveal" id="verify" data-step="verify">
-          <header class="section-heading"><span class="step-number">STEP 07</span><div><p>按顺序寻找成功信号</p><h2>验证完整通信闭环</h2></div></header>
-          <div class="log-sequence">
-            <article><span>01</span><div><b>网关开始监听</b><code>网关已启动，绑定 0.0.0.0:6099/ws</code></div></article>
-            <article><span>02</span><div><b>SnowLuma 通过验证</b><code>SnowLuma 请求已验证，正在连接 TRSS ...</code></div></article>
-            <article><span>03</span><div><b>上下游接通</b><code>[ws-Adapter][1] 桥接成功 SnowLuma ↔ TRSS</code></div></article>
-            <article><span>04</span><div><b>QQ 账号已登记</b><code>[ws-Adapter][1] 已识别账号 self_id=你的QQ号</code></div></article>
-          </div>
-          <div class="qq-test"><div class="qq-bubble"><small>在已连接的 QQ 私聊或群聊发送</small><strong>#适配器帮助</strong><button class="copy-button" type="button" data-copy-text="#适配器帮助">复制命令</button></div><div class="success-definition"><span aria-hidden="true">✓</span><div><b>收到回复才算全部完成</b><p>这代表 QQ → SnowLuma → ws-Adapter → TRSS → Yunzai 插件，以及返回线路全部正常。</p></div></div></div>
-          <div class="next-commands"><b>接通后还可以使用</b><code>#查看连接</code><span>查看网关、会话和账号</span><code>#重载配置</code><span>仅机器人主人可用，会短暂断线</span></div>
-          <div class="step-footer"><p>只看到“桥接成功”还不够，必须收到 QQ 回复。</p><button class="complete-step" type="button" data-complete="verify">标记本步完成</button></div>
-        </section>
-
-        <section class="manual-section reveal" id="troubleshoot" data-step="troubleshoot">
-          <header class="section-heading"><span class="step-number">STEP 08</span><div><p>只处理第一个异常</p><h2>QQ 不响应排查器</h2></div></header>
-          <div class="no-source"><span aria-hidden="true">×</span><p><b>不要修改插件源码。</b>先选择控制台里最后出现的成功信号或错误文字，我们只展开下一步。</p></div>
-          <label class="select-label" for="symptom-select">我现在看到的是：</label>
-          <select id="symptom-select">
-            <option value="no-start">没有“网关已启动”</option><option value="port">EADDRINUSE / 6099 被占用</option><option value="retry">SnowLuma 一直显示重连</option><option value="path">日志提示“路径应为 /ws”</option><option value="auth">401 / 403 / Token 错误</option><option value="upstream">502 / 504 / 无法建立桥接</option><option value="no-self">桥接成功，但没有 self_id</option><option value="no-reply">有 self_id，但 QQ 不回复</option>
-          </select>
-          <div class="diagnosis" id="diagnosis" aria-live="polite"></div>
-          <div class="step-footer"><p>修复后回到第 7 步，从第一条日志重新核对。</p><button class="complete-step" type="button" data-complete="troubleshoot">标记本步完成</button></div>
-        </section>
-
-        <section class="reference-section reveal" id="docker">
-          <header class="section-heading"><span class="step-number">REFERENCE</span><div><p>容器用户看这里</p><h2>Docker 接线说明</h2></div></header>
-          <div class="docker-diagram"><div class="docker-node"><small>SnowLuma 容器</small><b>reverse-ws</b></div><div class="docker-wire"><span>ws://trss-yunzai:6099/ws</span><i></i></div><div class="docker-node accent"><small>TRSS 容器</small><b>ws-Adapter</b></div></div>
-          <p>同一 Docker 网络中，地址应使用 TRSS 的<strong>服务名</strong>，不能使用 <code>127.0.0.1</code>。因为容器里的 <code>127.0.0.1</code> 只指向该容器自己。</p>
-          <div class="code-block"><div class="code-head"><span>跨网络或宿主机访问时发布端口</span><button class="copy-button" type="button" data-copy-target="docker-port">复制</button></div><pre id="docker-port"><code>services:
-  trss-yunzai:
-    ports:
-      - "6099:6099"</code></pre></div>
-          <p class="muted">SnowLuma 不需要访问 TRSS 内部的 2536 端口；ws-Adapter 在 TRSS 环境内部连接它。</p>
-        </section>
-
-        <section class="reference-section reveal" id="glossary">
-          <header class="section-heading"><span class="step-number">GLOSSARY</span><div><p>不会术语也能接通</p><h2>八个词的白话解释</h2></div></header>
-          <dl class="glossary-grid">
-            <div><dt>reverse-ws</dt><dd>由 QQ 客户端一侧主动拨号连接外部服务器。在这里，主动方是 SnowLuma。</dd></div>
-            <div><dt>监听</dt><dd>像打开一扇门等待别人进来。插件在所有网卡的 6099 端口等待 SnowLuma。</dd></div>
-            <div><dt>目标 URL</dt><dd>SnowLuma 要拨到的完整门牌，包括协议、主机、端口和路径。</dd></div>
-            <div><dt>0.0.0.0</dt><dd>只用于服务端监听，意思是接受所有网卡连接；不能当作客户端目标。</dd></div>
-            <div><dt>Token</dt><dd>连接时核对的共同口令。三处原始内容相同，TRSS 配置额外带 Bearer 前缀。</dd></div>
-            <div><dt>lifecycle</dt><dd>SnowLuma 连接后发出的“我是谁”事件，TRSS 据此登记 QQ 账号。</dd></div>
-            <div><dt>action</dt><dd>TRSS 要求 SnowLuma 执行的动作，例如向 QQ 发送一条消息。</dd></div>
-            <div><dt>echo</dt><dd>请求和响应共用的编号，让 TRSS 知道这条结果属于哪次动作。</dd></div>
-          </dl>
-        </section>
-
-        <section class="finish-panel reveal">
-          <span class="eyebrow"><b class="signal-dot"></b> LINE COMPLETE</span>
-          <h2>线路接通后，<br>不需要再碰源码。</h2>
-          <p>保留这个页面作为接线记录。遇到问题先对照日志信号，再按故障树处理第一处异常。</p>
-          <div><a class="button button-primary" href="#top">回到顶部</a><a class="button button-quiet" href="https://github.com/ShiYuPIay/ws-Adapter-plugin/issues" target="_blank" rel="noreferrer">仍需帮助？提交 Issue ↗</a></div>
-        </section>
-      </div>
+      <noscript><p>浏览器已禁用 JavaScript，请使用上方“立即前往新网站”链接。</p></noscript>
     </div>
+    <footer>旧地址仅用于兼容已有收藏与外部链接。</footer>
   </main>
-
-  <footer class="site-footer"><div><b>ws-Adapter 接线手册</b><p>SnowLuma reverse-ws → TRSS-Yunzai OneBotv11</p></div><div><a href="https://github.com/ShiYuPIay/ws-Adapter-plugin" target="_blank" rel="noreferrer">源代码</a><a href="#glossary">术语表</a><a href="#troubleshoot">故障排查</a></div><small>纯静态页面 · 不收集 Token · AGPL-3.0-or-later</small></footer>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const label = document.querySelector('#countdown')
+    let remaining = 3
+    const timer = window.setInterval(() => {
+      remaining -= 1
+      if (remaining > 0) {
+        label.textContent = `${remaining} 秒后自动前往`
+        return
+      }
+      window.clearInterval(timer)
+      label.textContent = '正在前往新网站'
+      window.location.replace('https://ws-adapter-plugin.github.io/')
+    }, 1000)
+  </script>
 </body>
 </html>
