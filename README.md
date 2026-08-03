@@ -100,11 +100,11 @@ WebSocket 连接必定有一端**监听（listen）**，另一端**主动连接�
 
 | 场景 | 指令 | 连接地址 |
 |---|---|---|
-| 同一台机器（无 Docker，默认已激活） | `#添加连接 snowluma-local` | `ws://localhost:2536/OneBotv11` |
-| 同一 Docker 网络 | `#添加连接 snowluma-docker` | `ws://snowluma:2536/OneBotv11` |
-| Docker Desktop（Mac/Win） | `#添加连接 host-internal` | `ws://host.docker.internal:2536/OneBotv11` |
-| Docker 跨网络（宿主机网关） | `#添加连接 ws://172.17.0.1:2536/OneBotv11` | `ws://172.17.0.1:2536/OneBotv11` |
-| 完全自定义 | `#添加连接 ws://地址/OneBotv11` | 自定义 |
+| 同一台机器（无 Docker，默认已激活） | `#添加连接 snowluma-local` | `ws://localhost:3001/` |
+| 同一 Docker 网络 | `#添加连接 snowluma-docker` | `ws://snowluma:3001/` |
+| Docker Desktop（Mac/Win） | `#添加连接 host-internal` | `ws://host.docker.internal:3001/` |
+| Docker 跨网络（宿主机网关） | `#添加连接 ws://172.17.0.1:3001/` | `ws://172.17.0.1:3001/` |
+| 完全自定义 | `#添加连接 ws://地址/` | 自定义 |
 
 ---
 
@@ -162,15 +162,6 @@ heartbeatInterval: 10000
 debug: true
 
 presets:
-  # ── type: forward ──────────────────────────────────────────
-  # 插件在本地监听端口，SnowLuma WS 客户端主动连过来
-  - name: adapter-forward
-    type: forward
-    host: "0.0.0.0"   # 监听所有网卡
-    port: 3002         # 避开 TRSS 核心 2536 和 SnowLuma 默认 3001
-    path: "/"
-    desc: "插件监听服务（对接 SnowLuma WS 客户端）"
-
   # ── type: reverse ──────────────────────────────────────────
   # 插件主动连出，SnowLuma WS 服务端在本地监听
   - name: snowluma-local
@@ -188,9 +179,18 @@ presets:
     url: "ws://host.docker.internal:3001/"
     desc: "Docker Desktop（Mac/Win），容器内访问宿主机"
 
+  # ── type: forward ──────────────────────────────────────────
+  # 插件在本地监听端口，SnowLuma WS 客户端主动连过来
+  - name: adapter-forward
+    type: forward
+    host: "0.0.0.0"   # 监听所有网卡
+    port: 3002         # 避开 TRSS 核心 2536 和 SnowLuma 默认 3001
+    path: "/"
+    desc: "插件监听服务（对接 SnowLuma WS 客户端）"
+
 # 启动时自动激活的预设（填预设的 name）
 active:
-  - adapter-forward   # 默认启动监听服务，SnowLuma WS 客户端连此处即可
+  - snowluma-local    # 默认插件主动连接本机 SnowLuma WS 服务端
 ```
 
 ---
@@ -321,7 +321,7 @@ SnowLuma WS 客户端主动连出，穿越 Docker 网络边界，到达宿主机
 
 ### Q：消息能收到但 Bot 没有响应？
 
-发送 `#调试模式 开`，观察日志中是否有 `已分发事件`。有分发但没响应是 Yunzai 插件的问题，和本适配器无关。
+开启调试模式（`#调试模式 开`），观察日志。连接建立后插件会将 WebSocket 移交给 TRSS 的 OneBotv11 适配器处理，若日志显示连接正常但 Bot 无响应，问题通常在 Yunzai 插件侧（规则未匹配或插件未加载），与本适配器无关。
 
 ### Q：想同时连接多个账号？
 
