@@ -2,6 +2,13 @@ import plugin from '../../../lib/plugins/plugin.js'
 import { ConfigStore } from '../components/config.js'
 import { redactUrl, WebSocketGateway } from '../components/gateway.js'
 
+function gatewayError(err, config) {
+  if (err?.code === 'EADDRINUSE' && config) {
+    return `监听 ${config.listen.host}:${config.listen.port}${config.listen.path} 失败：端口已被占用。请停止占用程序，或修改 config/config.yaml 后重启`
+  }
+  return err?.message || String(err)
+}
+
 export class wsAdapter extends plugin {
   constructor() {
     super({
@@ -36,9 +43,10 @@ export class wsAdapter extends plugin {
   }
 
   async createGateway() {
+    let config
     let gateway
     try {
-      const config = this.configStore.load()
+      config = this.configStore.load()
       gateway = new WebSocketGateway(config, logger)
       await gateway.start()
       this.gateway = gateway
@@ -46,8 +54,8 @@ export class wsAdapter extends plugin {
       if (!config.enable) logger.mark('[ws-Adapter] 网关已在配置中禁用')
     } catch (err) {
       await gateway?.stop().catch(() => {})
-      this.lastError = err.message
-      logger.error(`[ws-Adapter] 启动失败: ${err.message}`)
+      this.lastError = gatewayError(err, config)
+      logger.error(`[ws-Adapter] 启动失败: ${this.lastError}`)
     }
   }
 
@@ -72,14 +80,14 @@ export class wsAdapter extends plugin {
       this.lastError = ''
       logger.mark(config.enable ? '[ws-Adapter] 配置重载完成' : '[ws-Adapter] 配置重载完成，网关已禁用')
     } catch (err) {
-      this.lastError = err.message
-      logger.error(`[ws-Adapter] 重载失败: ${err.message}`)
+      this.lastError = gatewayError(err, config)
+      logger.error(`[ws-Adapter] 重载失败: ${this.lastError}`)
       await next.stop().catch(() => {})
       try {
         await previous?.start()
         this.gateway = previous
       } catch (restoreErr) {
-        this.lastError = `${err.message}; 恢复失败: ${restoreErr.message}`
+        this.lastError = `${this.lastError}; 恢复失败: ${restoreErr.message}`
         logger.error(`[ws-Adapter] 恢复旧网关失败: ${restoreErr.message}`)
       }
     }
@@ -98,7 +106,9 @@ export class wsAdapter extends plugin {
       '【ws-Adapter】',
       'SnowLuma reverse-ws → ws-Adapter → TRSS OneBotv11',
       '',
-      `SnowLuma 目标：ws://<TRSS主机IP>:${config.listen.port}${listenPath}`,
+      `插件监听：${config.listen.host}:${config.listen.port}${listenPath}`,
+      `SnowLuma 同机目标：ws://127.0.0.1:${config.listen.port}${listenPath}`,
+      `Docker 同网络：ws://<TRSS服务名>:${config.listen.port}${listenPath}`,
       `TRSS 上游：${redactUrl(config.upstream.url)}`,
       `授权 Token：${config.accessToken ? '已配置（两段连接共用）' : '未配置'}`,
       '',

@@ -114,6 +114,7 @@ debug: false
 - `connectTimeout` 必须是正整数毫秒值。
 - `accessToken` 是两段连接共用的唯一 Token。为空时两段连接均不启用 Token 验证。
 - 首次运行从 `config/default.yaml` 生成 `config/config.yaml`；用户配置文件加入 `.gitignore`。
+- 升级时仅将仍精确等于旧默认 `0.0.0.0:3002/` 的用户监听配置迁移到 `0.0.0.0:6099/ws`；任何自定义端口或路径保持不变。
 - 重载时先验证新配置，再关闭旧网关并启动新网关。验证失败时保留现有运行实例。
 
 地址含义严格区分：
