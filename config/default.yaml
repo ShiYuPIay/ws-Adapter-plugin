@@ -1,9 +1,11 @@
 enable: true
 
+# 插件绑定 0.0.0.0 以允许同机和跨容器访问。
+# SnowLuma 的目标 URL 应填写 127.0.0.1、TRSS 服务名或宿主机 IP，不能填写 0.0.0.0。
 listen:
   host: "0.0.0.0"
-  port: 3002
-  path: "/"
+  port: 6099
+  path: "/ws"
 
 upstream:
   url: "ws://127.0.0.1:2536/OneBotv11/ws"

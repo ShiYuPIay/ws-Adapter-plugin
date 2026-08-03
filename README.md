@@ -1,32 +1,36 @@
 # ws-Adapter-plugin
 
-TRSS-Yunzai 的 OneBot v11 透明 WebSocket 网关，用于让 SnowLuma `reverse-ws` 通过独立端口连接 TRSS 内置 OneBotv11 适配器。
+让 SnowLuma 的 OneBot v11 `reverse-ws` 接入 TRSS-Yunzai 默认 OneBotv11 适配器的透明 WebSocket 网关。
 
 ```text
 QQ 用户
   ↕
-SnowLuma reverse-ws
-  ↕ ws://<TRSS 主机>:3002/
-ws-Adapter
+SnowLuma reverse-ws 客户端
+  ↕ ws://127.0.0.1:6099/ws（同机示例）
+ws-Adapter 插件
   ↕ ws://127.0.0.1:2536/OneBotv11/ws
-TRSS-Yunzai OneBotv11 ↔ Yunzai 插件
+TRSS-Yunzai 默认 OneBotv11 适配器 ↔ Yunzai 插件
 ```
 
-插件不解析或修改 OneBot 数据。事件、API action、echo 响应、文本帧和二进制帧都会原样双向转发。
+SnowLuma 是主动连接方，ws-Adapter 是被连接方。插件虽然监听端口，但 SnowLuma 中创建的仍然是“WebSocket 反向客户端（reverse-ws）”，不是“WebSocket 服务”。
 
-## 工作方式
+插件不解析或修改 OneBot 数据。lifecycle、QQ 事件、API action、`echo` 响应、文本帧和二进制帧均原样双向转发。
 
-SnowLuma 主动连接 ws-Adapter。插件验证 Token 后，先连接 TRSS 上游；只有上游连接成功，插件才完成 SnowLuma 的 WebSocket 握手。
+## 开始前先确认
 
-因此 SnowLuma 显示“已连接”时，完整链路已经可用。TRSS 不可用或 Token 错误时，SnowLuma 不会得到虚假的连接成功状态，并会按照自己的重连间隔重试。
+需要准备：
 
-每个 SnowLuma 连接都有独立的 TRSS 上游连接，可同时接入多个账号。任意一端断开时整条会话关闭，由 SnowLuma 重建连接。
+- 已经能正常启动的 TRSS-Yunzai；
+- 已经登录 QQ 的 SnowLuma；
+- Node.js 18 或更高版本；
+- 能够重启 TRSS-Yunzai；
+- 如果启用 Token，准备一个自己生成的长随机字符串。
 
-## 安装
+不要把真实 Token 发到群聊、Issue、截图或日志中。
 
-需要 Node.js 18 或更高版本，以及已经能正常启动的 TRSS-Yunzai。
+## 第 1 步：安装插件
 
-将仓库放入 TRSS-Yunzai 的 `plugins` 目录并安装生产依赖：
+打开 TRSS-Yunzai 所在目录的终端，进入 `plugins` 目录：
 
 ```bash
 cd TRSS-Yunzai/plugins
@@ -35,9 +39,86 @@ cd ws-Adapter-plugin
 npm install --omit=dev
 ```
 
-重启 TRSS-Yunzai。插件首次加载会从 `config/default.yaml` 生成 `config/config.yaml`。
+完成后，目录结构中应当存在：
 
-## 配置
+```text
+TRSS-Yunzai/
+└─ plugins/
+   └─ ws-Adapter-plugin/
+      ├─ apps/
+      ├─ components/
+      ├─ config/
+      └─ package.json
+```
+
+如果 `git clone` 提示目录已经存在，不要重复安装；进入原目录执行 `git pull` 和 `npm install --omit=dev`。
+
+## 第 2 步：首次启动
+
+重启 TRSS-Yunzai。插件首次加载会自动创建：
+
+```text
+TRSS-Yunzai/plugins/ws-Adapter-plugin/config/config.yaml
+```
+
+看到以下日志表示插件已经开始监听：
+
+```text
+[ws-Adapter] 网关已启动，绑定 0.0.0.0:6099/ws；SnowLuma 同机目标 ws://127.0.0.1:6099/ws
+```
+
+如果没有生成 `config/config.yaml`，说明插件尚未被 TRSS-Yunzai 加载。先确认安装目录是否位于 TRSS-Yunzai 的 `plugins` 下，以及依赖是否安装成功。
+
+## 第 3 步：选择是否启用 Token
+
+### 方案 A：不启用 Token
+
+适合只在可信本机或隔离 Docker 网络中测试。
+
+TRSS-Yunzai 的 `config/config/server.yaml` 保持无鉴权：
+
+```yaml
+auth: {}
+```
+
+ws-Adapter 的 `config/config.yaml`：
+
+```yaml
+accessToken: ""
+```
+
+SnowLuma 的“授权 Token”也留空。
+
+### 方案 B：启用共用 Token（推荐）
+
+假设原始 Token 是：
+
+```text
+请替换成自己的随机Token
+```
+
+TRSS-Yunzai 的 `config/config/server.yaml` 必须填写完整请求头：
+
+```yaml
+auth:
+  Authorization: "Bearer 请替换成自己的随机Token"
+```
+
+ws-Adapter 的 `config/config.yaml` 只填写原始 Token，不写 `Bearer`：
+
+```yaml
+accessToken: "请替换成自己的随机Token"
+```
+
+SnowLuma 的“授权 Token”同样只填写原始 Token：
+
+```text
+请替换成自己的随机Token
+```
+
+三处含义必须一致：SnowLuma 把 Token 发给 ws-Adapter，ws-Adapter 验证成功后把同一个 Token 发给 TRSS。TRSS 的上游握手成功，才代表完整鉴权通过。
+
+## 第 4 步：配置插件
 
 编辑 `config/config.yaml`：
 
@@ -46,73 +127,170 @@ enable: true
 
 listen:
   host: "0.0.0.0"
-  port: 3002
-  path: "/"
+  port: 6099
+  path: "/ws"
 
 upstream:
   url: "ws://127.0.0.1:2536/OneBotv11/ws"
 
-accessToken: "请填写与 TRSS 相同的 Token"
+accessToken: ""
 connectTimeout: 5000
 debug: false
 ```
 
-`accessToken` 在两段连接中共用：
+字段解释：
 
-- SnowLuma 使用它连接 ws-Adapter。
-- ws-Adapter 使用它连接 TRSS-Yunzai。
+| 字段 | 作用 | 默认值 |
+|---|---|---|
+| `enable` | 是否启动网关 | `true` |
+| `listen.host` | 插件绑定的网卡；跨容器必须使用 `0.0.0.0` | `0.0.0.0` |
+| `listen.port` | SnowLuma 要连接的插件端口 | `6099` |
+| `listen.path` | SnowLuma 目标 URL 的路径 | `/ws` |
+| `upstream.url` | TRSS 默认 OneBotv11 地址 | `ws://127.0.0.1:2536/OneBotv11/ws` |
+| `accessToken` | SnowLuma 与 TRSS 共用的原始 Token | 空 |
+| `connectTimeout` | 等待 TRSS 上游的毫秒数 | `5000` |
+| `debug` | 是否记录不含正文的 OneBot 帧摘要 | `false` |
 
-如果 TRSS 没有启用 Token，保持空字符串即可。修改配置后发送 `#重载配置`，该命令仅机器人主人可用。
+`0.0.0.0` 只能用于插件监听，不能填写到 SnowLuma 的目标 URL。
 
-## SnowLuma reverse-ws
+从旧版升级时，如果用户配置仍然精确等于旧默认 `0.0.0.0:3002/`，插件会自动迁移为 `0.0.0.0:6099/ws`；修改过端口或路径的自定义配置不会被覆盖。
 
-在 SnowLuma 新建“WebSocket 反向客户端（reverse-ws）”：
+首次连接尚未成功时，保存配置后应重启 TRSS-Yunzai。只有 QQ 已经能够通信后，机器人才可能收到 `#重载配置` 命令。
 
-| 字段 | 建议值 |
+## 第 5 步：确定 SnowLuma 目标 URL
+
+根据实际环境只选择一行：
+
+| 运行环境 | SnowLuma 目标 URL |
 |---|---|
-| 目标 URL | `ws://<TRSS 主机 IP>:3002/` |
+| SnowLuma 与 TRSS 在同一台主机 | `ws://127.0.0.1:6099/ws` |
+| 两者在同一 Docker 网络的不同容器 | `ws://实际TRSS服务名:6099/ws` |
+| SnowLuma 在宿主机，TRSS 在 Docker | `ws://127.0.0.1:6099/ws`，并发布容器端口 `6099:6099` |
+| 两者位于不同主机 | `ws://TRSS宿主机IP:6099/ws`，并开放 TCP 6099 |
+
+同一 Docker 网络示例：如果 Compose 中 TRSS 服务名为 `trss-yunzai`，目标就是：
+
+```text
+ws://trss-yunzai:6099/ws
+```
+
+不同容器且不在同一网络时，需要给 TRSS 容器增加端口发布：
+
+```yaml
+ports:
+  - "6099:6099"
+```
+
+TRSS 内部的 `2536` 不需要暴露给 SnowLuma，因为 ws-Adapter 与 TRSS 运行在同一容器/进程环境中。
+
+## 第 6 步：配置 SnowLuma reverse-ws
+
+在 SnowLuma 新建“WebSocket 反向客户端（reverse-ws）”，不要选择“WebSocket 服务”。
+
+| SnowLuma 字段 | 填写内容 |
+|---|---|
+| 启用 | 打开 |
+| 名称 | `TRSS-Yunzai` 或任意便于识别的名称 |
+| 目标 URL | 使用上一步选择出的地址 |
 | 重连间隔 | `5000` ms |
-| 授权 Token | 与 ws-Adapter、TRSS 相同 |
+| 授权 Token | 与 ws-Adapter 相同；未启用鉴权则留空 |
 | 消息格式 | 数组 |
 | 角色 | `Universal` |
-| 上报自身消息 | 按需 |
+| 上报自身消息 | 按需，初次配置建议关闭 |
 
-同一台机器可使用 `ws://127.0.0.1:3002/`。同一 Docker 网络可使用 TRSS 容器服务名，例如 `ws://trss-yunzai:3002/`。
+保存后，SnowLuma 会主动连接 ws-Adapter。插件先连接 TRSS 上游，只有上游成功后才完成 SnowLuma 握手。
 
-如果 SnowLuma 位于其他 Docker 网络或宿主机，必须把 TRSS 容器的 `3002` 端口发布到可访问的网络。TRSS 的 `2536` 端口不需要暴露给 SnowLuma，因为 ws-Adapter 从 TRSS 内部连接它。
+## 第 7 步：核对日志
 
-## 命令
+正常情况下，TRSS 控制台应按顺序出现：
 
-| 命令 | 说明 |
-|---|---|
-| `#适配器帮助` | 显示 SnowLuma 地址、TRSS 上游和 Token 配置状态 |
-| `#查看连接` | 显示监听状态、握手数量、活动账号和最近错误 |
-| `#重载配置` | 验证并应用配置，仅机器人主人可用 |
+```text
+[ws-Adapter] SnowLuma 请求已验证，正在连接 TRSS ws://127.0.0.1:2536/OneBotv11/ws
+[ws-Adapter][1] 桥接成功 SnowLuma ↔ TRSS
+[ws-Adapter][1] 已识别账号 self_id=你的QQ号
+```
 
-## 日志与隐私
+此时 TRSS 默认 OneBotv11 适配器收到 SnowLuma 的 lifecycle 元事件，并登记对应 QQ 账号。插件不会重复安装或注册另一个 OneBotv11 适配器。
 
-默认只记录监听、握手、桥接、关闭和错误状态。`debug: true` 时额外记录 OneBot 帧摘要，例如 `message.group` 或 `action=send_msg`。
+## 第 8 步：在 QQ 验证完整通信
 
-插件不会在日志中打印：
+在已经连接的 QQ 私聊或群聊中发送：
 
-- 授权 Token；
-- 完整聊天正文；
-- cookie、票据或其他敏感字段；
-- base64 媒体内容。
+```text
+#适配器帮助
+```
 
-## 故障排查
+收到 ws-Adapter 的帮助回复，代表以下路径全部成功：
 
-### SnowLuma 一直重连
+```text
+QQ → SnowLuma → ws-Adapter → TRSS → Yunzai 插件
+QQ ← SnowLuma ← ws-Adapter ← TRSS ← Yunzai 插件
+```
 
-1. 确认 ws-Adapter 日志中出现“网关已启动”。
-2. 确认 SnowLuma 连接的是 `3002`，不是 TRSS 内部 `2536`。
-3. 确认三处 Token 完全一致。
-4. 确认 `upstream.url` 是 `ws://127.0.0.1:2536/OneBotv11/ws`。
-5. Docker 场景确认 `3002` 已发布或两个容器处于同一网络。
+连接成功后还可以发送：
 
-### SnowLuma 已连接，但 QQ 命令没有响应
+```text
+#查看连接
+```
 
-发送 `#查看连接`，确认活动连接中已经识别到账号。然后开启 `debug`，检查是否依次出现：
+机器人会显示监听状态、TRSS 上游、活动会话和已识别的账号。`#重载配置` 仅机器人主人可用，并会短暂断开当前连接。
+
+## QQ 命令不响应时不要修改源码
+
+先查看 TRSS 控制台，从上到下只处理命中的第一种情况。
+
+### 没有“网关已启动”
+
+- 检查插件目录是否正确；
+- 在插件目录执行 `npm install --omit=dev`；
+- 重启 TRSS-Yunzai。
+
+### 出现 `EADDRINUSE`
+
+`6099` 已被其他程序或另一个 ws-Adapter 实例占用。不要重复启动插件。
+
+Windows 检查：
+
+```powershell
+Get-NetTCPConnection -LocalPort 6099 -ErrorAction SilentlyContinue
+```
+
+Linux 检查：
+
+```bash
+ss -ltnp | grep 6099
+```
+
+停止重复实例，或同时修改插件端口与 SnowLuma 目标 URL。
+
+### 日志提示“路径应为 /ws”
+
+SnowLuma 目标 URL 缺少 `/ws`。正确同机地址：
+
+```text
+ws://127.0.0.1:6099/ws
+```
+
+### 日志提示“未提交授权 Token”或“授权 Token 不一致”
+
+检查 SnowLuma Token 与插件 `accessToken`。不要在插件值中写 `Bearer`。
+
+### 出现 `502`、`504` 或“无法建立桥接”
+
+插件无法连接 TRSS：
+
+1. 确认 TRSS 已经启动并监听 `2536`；
+2. 确认 `upstream.url` 没有改错；
+3. 启用 Token 时，确认 TRSS `server.yaml` 使用 `Authorization: "Bearer 原始Token"`；
+4. 修改 TRSS 鉴权后重启 TRSS-Yunzai。
+
+### 已经“桥接成功”，但没有“已识别账号”
+
+SnowLuma 没有发送 lifecycle 元事件。确认 SnowLuma 节点角色为 `Universal`，然后重启该节点。
+
+### 已识别账号，但 QQ 仍然没有回复
+
+把插件配置中的 `debug` 临时改为 `true`，重启 TRSS 后观察是否依次出现：
 
 ```text
 SnowLuma → TRSS event=message.*
@@ -120,13 +298,21 @@ TRSS → SnowLuma action=send_msg
 SnowLuma → TRSS response echo=*
 ```
 
-### `401` 或 `403`
+- 没有第一行：SnowLuma 没有上报 QQ 消息；
+- 有第一行、没有第二行：检查 Yunzai 插件是否加载、命令是否正确、机器人权限是否允许；
+- 有第二行、没有第三行：SnowLuma 没有返回 API 响应；
+- 三行都有：检查 SnowLuma 发送消息的结果和 QQ 风控状态。
 
-SnowLuma 未提交 Token 或 Token 与 `config/config.yaml` 不一致。
+排查完成后把 `debug` 改回 `false`。
 
-### `502` 或 `504`
+## 日志与隐私
 
-ws-Adapter 无法连接 TRSS 上游。检查 TRSS 是否已启动、端口是否为 `2536`，以及 TRSS 是否接受相同 Token。
+默认只记录监听、握手、桥接、账号识别、关闭和错误状态。插件不会打印：
+
+- 授权 Token；
+- 完整聊天正文；
+- cookie、票据或其他敏感字段；
+- base64 媒体内容。
 
 ## 开发验证
 
@@ -135,7 +321,7 @@ npm test
 npm run check
 ```
 
-测试覆盖配置验证、鉴权、延迟握手、完整 OneBot action/echo 循环、二进制帧、多连接隔离和关闭清理。
+测试覆盖默认地址、无 Token、错误 Token、TRSS 拒绝鉴权、延迟握手、SnowLuma bootstrap、完整 action/echo 循环、二进制帧、多连接隔离、隐私日志和关闭清理。
 
 ## License
 

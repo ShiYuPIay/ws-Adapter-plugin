@@ -18,6 +18,23 @@ function readYaml(file) {
   return data
 }
 
+function migrateLegacyListen(file, defaults, user) {
+  const listen = user.listen
+  if (
+    !listen ||
+    Object.keys(listen).length !== 3 ||
+    listen.host !== '0.0.0.0' ||
+    listen.port !== 3002 ||
+    listen.path !== '/'
+  ) return user
+
+  const next = { ...user, listen: { ...defaults.listen } }
+  const document = yaml.parseDocument(fs.readFileSync(file, 'utf8'))
+  for (const [key, value] of Object.entries(next.listen)) document.setIn(['listen', key], value)
+  fs.writeFileSync(file, document.toString(), 'utf8')
+  return next
+}
+
 function value(source, key, fallback) {
   return Object.hasOwn(source, key) ? source[key] : fallback
 }
@@ -85,7 +102,9 @@ export class ConfigStore {
       fs.mkdirSync(path.dirname(this.userPath), { recursive: true })
       fs.copyFileSync(this.defaultPath, this.userPath)
     }
-    const config = mergeConfig(readYaml(this.defaultPath), readYaml(this.userPath))
+    const defaults = readYaml(this.defaultPath)
+    const user = migrateLegacyListen(this.userPath, defaults, readYaml(this.userPath))
+    const config = mergeConfig(defaults, user)
     return validateConfig(config)
   }
 }

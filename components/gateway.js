@@ -156,7 +156,10 @@ export class WebSocketGateway {
     })
     this.running = true
     const { address, port } = this.server.address()
-    this.log.mark(`[ws-Adapter] 网关已启动 ws://${address}:${port}${this.config.listen.path}`)
+    this.log.mark(
+      `[ws-Adapter] 网关已启动，绑定 ${address}:${port}${this.config.listen.path}；` +
+      `SnowLuma 同机目标 ws://127.0.0.1:${port}${this.config.listen.path}`
+    )
   }
 
   handleUpgrade(req, socket, head) {
@@ -168,12 +171,21 @@ export class WebSocketGateway {
     } catch {
       return rejectUpgrade(socket, 404)
     }
-    if (url.pathname !== this.config.listen.path) return rejectUpgrade(socket, 404)
+    if (url.pathname !== this.config.listen.path) {
+      this.log.warn(`[ws-Adapter] 拒绝 SnowLuma：路径应为 ${this.config.listen.path}，收到 ${url.pathname}`)
+      return rejectUpgrade(socket, 404)
+    }
 
     if (this.config.accessToken) {
       const token = requestToken(req, url)
-      if (!token) return rejectUpgrade(socket, 401)
-      if (!tokenMatches(this.config.accessToken, token)) return rejectUpgrade(socket, 403)
+      if (!token) {
+        this.log.warn('[ws-Adapter] 拒绝 SnowLuma：未提交授权 Token')
+        return rejectUpgrade(socket, 401)
+      }
+      if (!tokenMatches(this.config.accessToken, token)) {
+        this.log.warn('[ws-Adapter] 拒绝 SnowLuma：授权 Token 不一致')
+        return rejectUpgrade(socket, 403)
+      }
     }
 
     const headers = {
@@ -289,7 +301,10 @@ export class WebSocketGateway {
     if (session.selfId) return
     try {
       const selfId = safeScalar(JSON.parse(data.toString()).self_id)
-      if (selfId) session.selfId = selfId
+      if (selfId) {
+        session.selfId = selfId
+        this.log.mark(`[ws-Adapter][${session.id}] 已识别账号 self_id=${selfId}`)
+      }
     } catch {}
   }
 

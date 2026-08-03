@@ -75,7 +75,11 @@ async function waitFor(check, timeout = 1000) {
 }
 
 test('rejects invalid paths and tokens before contacting TRSS', async t => {
-  const gateway = await startGateway({ accessToken: 'shared-secret' })
+  const warnings = []
+  const gateway = await startGateway(
+    { accessToken: 'shared-secret' },
+    { warn: value => warnings.push(String(value)) }
+  )
   t.after(() => gateway.stop())
 
   assert.equal(await responseStatus(gatewayUrl(gateway, '/wrong')), 404)
@@ -84,6 +88,10 @@ test('rejects invalid paths and tokens before contacting TRSS', async t => {
     headers: { Authorization: 'Bearer wrong-secret' }
   }), 403)
   assert.equal(gateway.getStatus().pending, 0)
+  assert.equal(warnings.some(value => value.includes('路径应为')), true)
+  assert.equal(warnings.some(value => value.includes('未提交授权 Token')), true)
+  assert.equal(warnings.some(value => value.includes('授权 Token 不一致')), true)
+  assert.equal(warnings.join('\n').includes('shared-secret'), false)
 })
 
 test('delays SnowLuma open until the TRSS handshake succeeds', async t => {
@@ -125,20 +133,42 @@ test('delays SnowLuma open until the TRSS handshake succeeds', async t => {
 })
 
 test('returns 502 when TRSS rejects the upstream WebSocket', async t => {
+  let authorization = ''
   const rejected = new WebSocketServer({
     host: '127.0.0.1',
     port: 0,
-    verifyClient: () => false
+    verifyClient: info => {
+      authorization = info.req.headers.authorization || ''
+      return false
+    }
   })
   await once(rejected, 'listening')
   t.after(() => closeUpstream(rejected))
   const gateway = await startGateway({
-    upstream: { url: `ws://127.0.0.1:${rejected.address().port}/OneBotv11/ws` }
+    upstream: { url: `ws://127.0.0.1:${rejected.address().port}/OneBotv11/ws` },
+    accessToken: 'shared-secret'
   })
   t.after(() => gateway.stop())
 
-  assert.equal(await responseStatus(gatewayUrl(gateway)), 502)
+  assert.equal(await responseStatus(gatewayUrl(gateway), {
+    headers: { Authorization: 'Bearer shared-secret' }
+  }), 502)
+  assert.equal(authorization, 'Bearer shared-secret')
   assert.match(gateway.getStatus().lastError, /HTTP 401/)
+})
+
+test('allows an unauthenticated SnowLuma client and omits upstream authorization', async t => {
+  const { wss, url } = await startUpstream()
+  t.after(() => closeUpstream(wss))
+  const gateway = await startGateway({ upstream: { url }, accessToken: '' })
+  t.after(() => gateway.stop())
+
+  const upstreamConnection = once(wss, 'connection')
+  const downstream = await openWebSocket(gatewayUrl(gateway))
+  t.after(() => downstream.terminate())
+  const [, request] = await upstreamConnection
+
+  assert.equal(request.headers.authorization, undefined)
 })
 
 test('forwards the shared token and preserves the complete OneBot message loop', async t => {
@@ -205,6 +235,7 @@ test('forwards the shared token and preserves the complete OneBot message loop',
   assert.equal(output.includes('url-secret'), false)
   assert.equal(output.includes(secretMessage), false)
   assert.equal(output.includes('event=message.private'), true)
+  assert.equal(output.includes('已识别账号 self_id=10001'), true)
   assert.equal(gateway.getStatus().upstream.includes('url-secret'), false)
   assert.equal(gateway.getStatus().sessions[0].selfId, '10001')
 })

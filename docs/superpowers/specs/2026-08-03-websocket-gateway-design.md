@@ -15,11 +15,13 @@ QQ 用户
 
 SnowLuma 负责主动连接和断线重连。ws-Adapter 只负责验证连接、建立 TRSS 上游并透明转发双向 WebSocket 帧。
 
+这里的 `reverse-ws` 描述的是 SnowLuma 的角色：SnowLuma 是主动拨号的 WebSocket 客户端，ws-Adapter 必须是被连接的 WebSocket 服务端。插件绑定 `0.0.0.0` 不会把 SnowLuma 变成正向模式；SnowLuma 界面中的“WebSocket 服务”才是 SnowLuma 自己监听的正向模式，本项目不使用该节点。
+
 当前实现同时包含插件主动连接、插件监听、消息格式转换和 Docker 地址诊断等多套职责。其核心调用 `Bot.adapter.get('OneBotv11').connect(ws)` 与 TRSS-Yunzai 实际接口不匹配：`Bot.adapter` 是数组，而 OneBotv11 的 `connect(data, ws)` 是 lifecycle 事件处理器，不是原始 WebSocket 接入口。
 
 ## 目标
 
-- SnowLuma 使用 `reverse-ws` 主动连接插件的独立监听端口，默认 `3002`。
+- SnowLuma 使用 `reverse-ws` 主动连接插件的独立监听地址，默认目标为 `ws://127.0.0.1:6099/ws`。
 - 插件使用同一个授权 Token 连接 TRSS-Yunzai，默认上游地址为 `ws://127.0.0.1:2536/OneBotv11/ws`。
 - SnowLuma 只有在 TRSS 上游已经连接成功后才完成 WebSocket 握手并显示已连接。
 - OneBot lifecycle、事件、API action 和响应均按原始帧、原始顺序双向传输。
@@ -92,12 +94,12 @@ ws-Adapter-plugin/
 enable: true
 
 listen:
-  host: 0.0.0.0
-  port: 3002
-  path: /
+  host: "0.0.0.0"
+  port: 6099
+  path: "/ws"
 
 upstream:
-  url: ws://127.0.0.1:2536/OneBotv11/ws
+  url: "ws://127.0.0.1:2536/OneBotv11/ws"
 
 accessToken: ""
 connectTimeout: 5000
@@ -112,7 +114,16 @@ debug: false
 - `connectTimeout` 必须是正整数毫秒值。
 - `accessToken` 是两段连接共用的唯一 Token。为空时两段连接均不启用 Token 验证。
 - 首次运行从 `config/default.yaml` 生成 `config/config.yaml`；用户配置文件加入 `.gitignore`。
+- 升级时仅将仍精确等于旧默认 `0.0.0.0:3002/` 的用户监听配置迁移到 `0.0.0.0:6099/ws`；任何自定义端口或路径保持不变。
 - 重载时先验证新配置，再关闭旧网关并启动新网关。验证失败时保留现有运行实例。
+
+地址含义严格区分：
+
+- `0.0.0.0:6099` 是插件的绑定地址，只出现在插件配置和监听日志中，不能作为 SnowLuma 的目标 URL。
+- SnowLuma 与 TRSS 在同一宿主环境时使用 `ws://127.0.0.1:6099/ws`。
+- SnowLuma 与 TRSS 位于同一 Docker 网络但不同容器时，使用 `ws://<TRSS 服务名>:6099/ws`。
+- 两者位于不同主机或不同 Docker 网络时，TRSS 容器必须发布 `6099` 端口，SnowLuma 使用 `ws://<TRSS 宿主机 IP>:6099/ws`。
+- ws-Adapter 运行在 TRSS 进程内时，上游保持 `ws://127.0.0.1:2536/OneBotv11/ws`。
 
 ## 组件职责
 
@@ -151,17 +162,25 @@ debug: false
 
 1. SnowLuma 请求升级到配置的 `listen.path`。
 2. 插件从 `Authorization: Bearer <token>` 读取 Token；同时兼容 OneBot 常见的 `access_token` 查询参数。
-3. 路径不匹配返回 `404`；缺少 Token 返回 `401`；Token 不匹配返回 `403`。
-4. 插件创建 TRSS 上游连接，并设置：
+3. 当 `accessToken` 为空时，插件不要求 SnowLuma 提交 Token，连接 TRSS 时也不发送授权头。
+4. 当 `accessToken` 非空时，插件要求 SnowLuma 提交完全相同的 Token；缺少返回 `401`，不匹配返回 `403`。路径不匹配始终返回 `404`。
+5. 插件创建 TRSS 上游连接，并设置：
    - `Authorization: Bearer <同一 Token>`，Token 非空时发送；
    - 转发下游的 `X-Self-ID`；
    - 转发下游的 `X-Client-Role`，默认 `Universal`；
    - 使用明确的 ws-Adapter User-Agent。
-5. 上游在 `connectTimeout` 内成功后，插件完成下游 Upgrade。
-6. 上游拒绝、报错或超时时，插件向尚未升级的下游返回 `502` 或 `504` 并关闭 TCP socket。
-7. 下游完成握手后，SnowLuma 的 bootstrap 帧立即原样转发给 TRSS。
+6. TRSS 自己验证上游请求中的 Token。插件无法读取 TRSS 内部保存的 Token，因此以上游握手成功作为“两端 Token 相同”的最终判定。
+7. 上游在 `connectTimeout` 内成功后，插件完成下游 Upgrade。
+8. 上游拒绝、报错或超时时，插件向尚未升级的下游返回 `502` 或 `504` 并关闭 TCP socket。
+9. 下游完成握手后，SnowLuma 的 bootstrap 帧立即原样转发给 TRSS。
 
 Token 比较使用长度检查和常量时间比较，日志永远不打印 Token 值。
+
+## 适配器与账号注册时机
+
+TRSS-Yunzai 启动时已经通过 `Bot.adapter.push()` 安装内置 OneBotv11 适配器，监听器加载阶段调用该适配器的 `load()` 注册 `/OneBotv11` WebSocket 处理入口。ws-Adapter 不得再向 `Bot.adapter` 重复注册另一个 OneBotv11 适配器。
+
+SnowLuma 连接成功后会发送 lifecycle bootstrap 元事件。该帧经 ws-Adapter 原样到达 TRSS 后，内置 OneBotv11 适配器才调用 `connect(data, ws)`，将 QQ 账号登记到 `Bot[data.self_id]` 并发出 `connect.<self_id>`。因此顺序是“默认适配器随 TRSS 启动加载 -> 完整 WebSocket 链路建立 -> lifecycle 到达 -> QQ 账号上线”，不存在每次 SnowLuma 连接时重新安装插件或重新注册适配器。
 
 ## 数据流
 
@@ -217,15 +236,18 @@ TRSS 发出的 `get_login_info`、`send_msg` 等 action 原样到达 SnowLuma；
 自动化测试覆盖：
 
 1. 默认配置生成、合并和非法配置拒绝。
-2. 错误路径、缺少 Token 和错误 Token 分别返回正确状态。
-3. 同一个 Token 被验证并作为 Bearer Token 发送到 TRSS 上游。
-4. TRSS 上游未 open 前，SnowLuma 下游不会触发 open。
-5. 上游成功后 lifecycle 三帧按原始顺序到达上游。
-6. TRSS action 到达 SnowLuma，SnowLuma 的 echo 响应返回 TRSS。
-7. 文本帧与二进制帧保持内容和类型不变。
-8. 多个 SnowLuma 客户端分别使用独立上游且消息不会串线。
-9. 上游失败、超时、下游断开和网关停止均完整清理连接。
-10. 日志输出不包含 Token、完整聊天文本或 base64 数据。
+2. 默认监听值严格为 `0.0.0.0:6099/ws`。
+3. Token 为空时，下游无需授权且上游不发送授权头。
+4. Token 非空时，错误路径、缺少 Token 和错误 Token 分别返回正确状态。
+5. 同一个 Token 被验证并作为 Bearer Token 发送到 TRSS 上游；上游拒绝时下游不得报告连接成功。
+6. TRSS 上游未 open 前，SnowLuma 下游不会触发 open。
+7. 上游成功后 lifecycle、enable 和 heartbeat bootstrap 帧按原始顺序到达上游。
+8. lifecycle 帧包含的 `self_id` 可被状态摘要识别，且不被网关修改。
+9. TRSS action 到达 SnowLuma，SnowLuma 的 echo 响应返回 TRSS。
+10. 文本帧与二进制帧保持内容和类型不变。
+11. 多个 SnowLuma 客户端分别使用独立上游且消息不会串线。
+12. 上游失败、超时、下游断开和网关停止均完整清理连接。
+13. 日志输出不包含 Token、完整聊天文本或 base64 数据。
 
 项目命令：
 
@@ -237,12 +259,15 @@ npm run check
 最终手工验收：
 
 1. TRSS-Yunzai 启用 OneBotv11 默认地址并配置 Token。
-2. ws-Adapter 使用相同 Token，监听 `3002`。
-3. SnowLuma reverse-ws 目标填写 `ws://<TRSS 主机>:3002/`，角色选择 `Universal`。
+2. ws-Adapter 使用相同 Token，监听 `0.0.0.0:6099/ws`。
+3. SnowLuma reverse-ws 按环境填写目标：同机为 `ws://127.0.0.1:6099/ws`，同一 Docker 网络为 `ws://<TRSS 服务名>:6099/ws`，跨主机为 `ws://<TRSS 宿主机 IP>:6099/ws`；角色选择 `Universal`。
 4. SnowLuma 只有在插件成功连接 TRSS 后显示已连接。
-5. QQ 用户发送任意已安装 Yunzai 插件的帮助命令。
-6. 日志显示事件进入、TRSS action 返回和会话保持在线。
-7. QQ 用户收到插件响应。
+5. 日志依次显示插件监听、SnowLuma 请求已验证、TRSS 上游连接成功、桥接会话建立和 `self_id` 识别。
+6. QQ 用户发送 `#适配器帮助`。
+7. 日志显示事件进入、TRSS action 返回和带相同 `echo` 的响应回流。
+8. QQ 用户收到插件响应。
+
+若第 6 步无响应，用户必须先执行 `#查看连接` 并按状态分流：未建立下游检查地址/端口/路径，`401/403` 检查 Token，`502/504` 检查 TRSS 上游，已桥接但无 `self_id` 检查 lifecycle，已识别账号后才检查 Yunzai 命令和权限。教程不得建议零基础用户直接修改插件源代码。
 
 ## 完成标准
 
@@ -251,3 +276,10 @@ npm run check
 - 工作树只包含本次网关重构所需改动。
 - README、默认配置和实际行为一致。
 - SnowLuma 到 TRSS 的完整 OneBot 请求/响应循环可按手工验收步骤复现。
+
+## 交付顺序
+
+1. 先按本文修正插件默认地址、Token 状态机、日志、测试和 README，并完成自动化与手工通信验收。
+2. 插件通过验收后，另行编写零基础教学网站设计与实施计划。
+3. 教学网站使用 GitHub Pages 从仓库内容发布，覆盖安装、启用、环境选择、SnowLuma 逐字段配置、QQ 实测、Docker 和故障决策树。
+4. 网站上线后，将公开网址写入 GitHub 仓库 About 区域的 Website/Homepage 字段；Cloudflare 自定义域名在用户提供具体域名后绑定。
